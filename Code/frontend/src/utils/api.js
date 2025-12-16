@@ -1,103 +1,127 @@
-// src/utils/api.js
+const BASE_URL = "http://127.0.0.1:8000";
 
-export function analyzeCode(code) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        issues: [
-          {
-            type: "Unused Variable",
-            severity: "warning",
-            line: 12,
-            message: "Variable 'x' is declared but never used",
-          },
-          {
-            type: "Missing Docstring",
-            severity: "info",
-            line: 1,
-            message: "Add a docstring to improve readability",
-          },
-        ],
-        complexity: {
-          bigO: "O(n^2)",
-          score: 68,
-          explanation: "Nested loops detected",
-        },
-        qualityScore: 72,
-      });
-    }, 600);
+/* =====================================================
+   SESSION ID (STABLE & PERSISTENT)
+===================================================== */
+export const sessionId =
+  localStorage.getItem("codesage_session") ??
+  (() => {
+    const id = crypto.randomUUID();
+    localStorage.setItem("codesage_session", id);
+    return id;
+  })();
+
+/* =====================================================
+   ANALYZE CODE
+===================================================== */
+export async function analyzeCode(code) {
+  const res = await fetch(`${BASE_URL}/analyze`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code }),
   });
+
+  if (!res.ok) throw new Error("Analyze failed");
+  return await res.json();
 }
 
-export function refactorCode(code) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        refactoredCode: `def find_max(nums):\n    return max(nums)`,
-        explanation:
-          "Simplified the loop using Python built-in max(), improved readability.",
-      });
-    }, 700);
+
+/* =====================================================
+   AI REFACTOR
+===================================================== */
+export async function refactorCode(code, issues = []) {
+  const res = await fetch(`${BASE_URL}/ai/refactor`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code, issues }),
   });
+
+  const data = await res.json();
+
+  return {
+    refactoredCode: data.refactored_code,
+    explanation: data.notes,
+  };
 }
 
-export function analyzeAndRefactor(code) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        issues: [
-          {
-            type: "Deep Nesting",
-            severity: "warning",
-            line: 8,
-            message: "Reduce nesting to improve readability",
-          },
-        ],
-        complexity: {
-          bigO: "O(n)",
-          score: 85,
-          explanation: "Single loop after refactor",
-        },
-        qualityScore: 88,
-        refactoredCode: `def process(items):\n    return [i*2 for i in items]`,
-        explanation: "Removed nested loops and used list comprehension.",
-      });
-    }, 900);
+/* =====================================================
+   ANALYZE + REFACTOR
+===================================================== */
+export async function analyzeAndRefactor(code) {
+  const res = await fetch(`${BASE_URL}/ai/analyze-and-refactor`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code }),
   });
+
+  if (!res.ok) throw new Error("Pipeline failed");
+  return res.json();
 }
 
-export function getVersionHistory(sessionId) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        {
-          id: "v1",
-          label: "Initial Upload",
-          timestamp: "2 mins ago",
-        },
-        {
-          id: "v2",
-          label: "AI Refactor",
-          timestamp: "Just now",
-        },
-      ]);
-    }, 400);
+/* =====================================================
+   TEST CASES
+===================================================== */
+export async function generateTestCases(code) {
+  const res = await fetch(`${BASE_URL}/ai/testcases`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code }),
   });
+
+  if (!res.ok) throw new Error("Testcase generation failed");
+  const data = await res.json();
+  return data.test_cases ?? [];
 }
 
-export function getVersion(versionId) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        code: "def add(a,b): return a+b",
-        issues: [],
-        complexity: {
-          bigO: "O(1)",
-          score: 95,
-        },
-        qualityScore: 92,
-        diff: "+ Simplified function",
-      });
-    }, 400);
+/* =====================================================
+   VERSION HISTORY
+===================================================== */
+export async function getVersionHistory() {
+  const res = await fetch(`${BASE_URL}/versions/${sessionId}`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.history ?? [];
+}
+
+export async function getVersionDetails(versionId) {
+  const res = await fetch(
+    `${BASE_URL}/versions/version/${versionId}`
+  );
+
+  if (!res.ok) throw new Error("Get version failed");
+  const data = await res.json();
+  return data.version;
+}
+
+export async function saveVersion(snapshot) {
+  const res = await fetch(`${BASE_URL}/versions/save`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      session_id: sessionId,
+      ...snapshot,
+    }),
   });
+
+  if (!res.ok) throw new Error("Save version failed");
+  return res.json();
+}
+
+export async function deleteVersion(versionId) {
+  const res = await fetch(
+    `${BASE_URL}/versions/version/${versionId}`,
+    { method: "DELETE" }
+  );
+
+  if (!res.ok) throw new Error("Delete version failed");
+  return res.json();
+}
+
+export async function clearAllVersions() {
+  const res = await fetch(`${BASE_URL}/versions/${sessionId}`, {
+    method: "DELETE",
+  });
+
+  if (!res.ok) throw new Error("Clear versions failed");
+  return res.json();
 }

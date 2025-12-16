@@ -13,10 +13,15 @@ def run_testcases_step(refactored_code, issues):
         prompt = template + f"\n\nCODE TO TEST:\n{refactored_code}"
         response = call_gemini(prompt)
 
-        result["test_cases"] = response.get("test_cases", "")
+        if isinstance(response, list):
+            result["test_cases"] = response
+        elif isinstance(response, dict):
+            result["test_cases"] = response.get("test_cases", [])
+        else:
+            result["test_cases"] = []
 
     except:
         logger.exception("Testcase generation failed")
-        result["test_cases"] = ""
+        result["test_cases"] = []
 
     return result

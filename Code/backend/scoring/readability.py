@@ -1,4 +1,7 @@
 def analyze_readability(code: str):
+
+    MAX_READABILITY_LOSS = 12
+
     penalty = 0
     base_score = 25
     slices = []
@@ -74,6 +77,7 @@ def analyze_readability(code: str):
 
 
     # Score clamp
+    penalty = min(penalty, MAX_READABILITY_LOSS)
     readability_score = max(0, base_score - penalty)
 
     return {"readability_score": readability_score}

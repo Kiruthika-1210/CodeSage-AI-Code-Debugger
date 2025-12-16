@@ -2,8 +2,10 @@ import React from "react";
 
 function ScorePanel({ data }) {
 
+  console.log("🎛️ ScorePanel received data:", data);
+
   const getBarColor = (score) => {
-    if (score >= 80) return "bg-green-500";
+    if (score >= 75) return "bg-green-500";
     if (score >= 50) return "bg-yellow-400";
     return "bg-red-500";
   };
@@ -14,7 +16,20 @@ function ScorePanel({ data }) {
     return "text-red-400";
   };
 
-  const ScoreRow = ({ label, value, tooltip }) => (
+  const getLabel = (score) => {
+    if (score >= 85) return "Excellent";
+    if (score >= 70) return "Good";
+    if (score >= 50) return "Fair";
+    return "Poor";
+  };
+  
+  const ScoreRow = ({ label, value, tooltip }) => {
+    const safeValue = typeof value === "number" ? value : 0;
+    
+    const barColor = getBarColor(safeValue);
+    const textColor = getTextColor(safeValue);
+    
+    return (
     <div className="space-y-1">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
@@ -37,19 +52,27 @@ function ScorePanel({ data }) {
           </span>
         </div>
 
-        <span className={`font-medium ${getTextColor(value)}`}>
-          {value}
-        </span>
+        {/* ✅ SCORE + LABEL */}
+        <div className="flex items-center gap-3">
+          <span className={`font-medium ${textColor}`}>
+            {safeValue}/100
+          </span>
+          <span className={`text-xs ${textColor}`}>
+            {getLabel(safeValue)}
+          </span>
+        </div>
       </div>
 
       <div className="w-full h-3 rounded-full bg-[#1a1a1d] overflow-hidden">
         <div
-          className={`h-full ${getBarColor(value)}`}
-          style={{ width: `${value}%` }}
+          className={`h-full ${barColor}`}
+          style={{ width: `${safeValue}%` }}
         />
       </div>
     </div>
-  );
+    );
+  };
+
 
   return (
     <div className="mt-8 p-6 rounded-2xl bg-[#0d0d0f] border border-[#1a1a1d] shadow-xl text-white">

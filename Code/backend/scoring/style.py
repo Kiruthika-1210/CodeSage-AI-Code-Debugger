@@ -1,4 +1,7 @@
 def analyze_style(code: str):
+
+    MAX_STYLE_LOSS = 8
+
     slices = []
     penalty = 0
 
@@ -61,7 +64,8 @@ def analyze_style(code: str):
         penalty += 2
 
     # Final style score
-    style_score = max(0, 25 - penalty)
+    penalty = min(penalty, MAX_STYLE_LOSS)
+    style_score = max(10, 25 - penalty)
 
     return {
         "style_score": style_score

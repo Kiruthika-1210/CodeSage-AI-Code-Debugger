@@ -1,4 +1,7 @@
 def analyze_documentation(code: str):
+
+    MAX_DOC_PENALTY = 10
+
     slices = code.split("\n")
     penalty = 0
 
@@ -68,7 +71,8 @@ def analyze_documentation(code: str):
             i += 1
 
     # FINAL DOCUMENTATION SCORE
-    documentation_score = max(0, 25 - penalty)
+    penalty = min(penalty, MAX_DOC_PENALTY)
+    documentation_score = max(15, 25 - penalty)
 
     return {
         "documentation_score": documentation_score

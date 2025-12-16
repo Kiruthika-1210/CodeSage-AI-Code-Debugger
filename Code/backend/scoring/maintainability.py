@@ -1,104 +1,94 @@
 def analyze_maintainability(code: str):
-    slices = []
+    lines = code.splitlines()
     penalty = 0
 
-    # SPLIT CODE INTO LINES
-    current_line = ""
-    for ch in code:
-        if ch == "\n":
-            slices.append(current_line)
-            current_line = ""
-        else:
-            current_line += ch
-    if current_line:
-        slices.append(current_line)
-
-    # 1. FUNCTION LENGTH CALCULATION
+    # ---------------------------
+    # 1. FUNCTION LENGTH
+    # ---------------------------
     functions = []
-    n = len(slices)
+    n = len(lines)
     i = 0
 
     while i < n:
-        if slices[i].lstrip().startswith("def "):
+        if lines[i].lstrip().startswith("def "):
             start = i
-            def_indent = len(slices[i]) - len(slices[i].lstrip())
-
+            indent = len(lines[i]) - len(lines[i].lstrip())
             i += 1
-            # find the end of this function
-            while i < n:
-                current_indent = len(slices[i]) - len(slices[i].lstrip())
 
-                # if indentation returns → function ends
-                if current_indent <= def_indent and slices[i].strip() != "":
+            while i < n:
+                curr_indent = len(lines[i]) - len(lines[i].lstrip())
+                if curr_indent <= indent and lines[i].strip():
                     break
                 i += 1
 
-            end = i - 1
-            length = end - start + 1
-
-            functions.append((start, end, length))
+            length = i - start
+            functions.append(length)
         else:
             i += 1
 
-    # Apply function length penalty
-    for fn in functions:
-        if fn[2] > 30:
-            penalty += 10   # correct value per spec
+    for length in functions:
+        if length > 50:
+            penalty += 8
+        elif length > 30:
+            penalty += 5
 
-    # 2. REPEATED LOGIC DETECTION
-    seen_blocks = set()
+    # ---------------------------
+    # 2. REPEATED LOGIC (SOFT)
+    # ---------------------------
+    seen = set()
+    repeat_hits = 0
 
-    for i in range(len(slices) - 2):
+    for i in range(len(lines) - 2):
         block = (
-            slices[i].strip(),
-            slices[i+1].strip(),
-            slices[i+2].strip()
+            lines[i].strip(),
+            lines[i + 1].strip(),
+            lines[i + 2].strip(),
         )
 
-        if all(line == "" for line in block):
+        if not any(block):
             continue
 
-        if block in seen_blocks:
-            penalty += 10
-            break
+        if block in seen:
+            repeat_hits += 1
         else:
-            seen_blocks.add(block)
+            seen.add(block)
 
-    # 3. DEEP NESTING DETECTION
+    if repeat_hits >= 2:
+        penalty += 5   # soft penalty, not brutal
+
+    # ---------------------------
+    # 3. DEEP NESTING (LIGHT)
+    # ---------------------------
     max_depth = 0
-
-    for line in slices:
-        stripped = line.strip()
-        if stripped == "":
-            continue
-
-        space_count = len(line) - len(line.lstrip())
-        depth = space_count // 4
-
-        if depth > max_depth:
-            max_depth = depth
+    for line in lines:
+        if line.strip():
+            depth = (len(line) - len(line.lstrip())) // 4
+            max_depth = max(max_depth, depth)
 
     if max_depth >= 6:
-        penalty += 10
+        penalty += 6
     elif max_depth >= 4:
-        penalty += 5
+        penalty += 3
 
-    # 4. BRANCH COUNTING
-    branch_count = 0
-    branches = ["if ", "elif ", "else:", "match ", "case "]
+    # ---------------------------
+    # 4. BRANCH COUNT
+    # ---------------------------
+    branch_count = sum(
+        1 for line in lines
+        if line.strip().startswith(("if ", "elif ", "else:", "match ", "case "))
+    )
 
-    for line in slices:
-        stripped = line.strip()
-        for b in branches:
-            if stripped.startswith(b):
-                branch_count += 1
-                break
+    if branch_count >= 6:
+        penalty += 6
+    elif branch_count >= 4:
+        penalty += 3
 
-    if branch_count >= 4:
-        penalty += 10
-    elif branch_count >= 3:
-        penalty += 5
-
+    # ---------------------------
+    # FINAL SCORE
+    # ---------------------------
+    penalty = min(penalty, 25)
     score = max(0, 25 - penalty)
 
-    return {"maintainability_score": score}
+    return {
+        "maintainability_score": score
+    }

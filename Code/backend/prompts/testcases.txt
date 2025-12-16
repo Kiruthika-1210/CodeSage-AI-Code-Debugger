@@ -1,13 +1,47 @@
-Generate pytest test cases for the provided Python code.
+You are an AI that generates LeetCode-style test cases.
 
-Include:
-- typical cases  
-- edge cases  
-- invalid inputs  
+STRICT RULES:
+- Generate ONLY 3 to 4 test cases
+- Follow competitive programming style
+- Each test case must be independent
+- Inputs must match function parameters
+- Keep cases simple and realistic
 
-Do NOT modify the function logic or signature.
+TEST CASE TYPES:
+1. One normal case
+2. One edge case
+3. One corner or tricky case
+4. (Optional) One invalid case if applicable
 
-OUTPUT JSON ONLY:
-{
-  "test_cases": "pytest code..."
-}
+OUTPUT JSON ONLY.
+
+FORMAT:
+[
+  {
+    "name": "Case name",
+    "input": {
+      "display": "human readable input (LeetCode style)",
+      "raw": { original structured input }
+    },
+    "expected": "human readable expected output"
+  }
+]
+
+RULES:
+- Input.display MUST be single-line
+- Use format: nums = [..], target = x
+- Do NOT include JSON braces in display
+- Generate ONLY 3 test cases:
+  1. Normal case
+  2. Edge case
+  3. No-solution case
+
+
+DO NOT:
+- Generate pytest code
+- Generate explanations
+- Generate more than 4 cases
+- Use markdown or backticks
+
+CODE TO ANALYZE:
+{{CODE}}

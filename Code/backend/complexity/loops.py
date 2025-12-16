@@ -3,7 +3,7 @@ import ast
 def analyze_loops(tree):
     total_loops = 0
     nested_loops_detected = False
-    max_loop_depth = -1
+    max_loop_depth = 0
     module_level_loops = 0
     loops_in_functions = {}
     current_function = None

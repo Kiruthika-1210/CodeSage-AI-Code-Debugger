@@ -4,35 +4,31 @@ from scoring.readability import analyze_readability
 from scoring.style import analyze_style
 
 def overall_score(code: str):
-    # Run all scorers
-    readability_result = analyze_readability(code)
-    maintainability_result = analyze_maintainability(code)
-    documentation_result = analyze_documentation(code)
-    style_result = analyze_style(code)
+    # Run analyzers
+    r = analyze_readability(code)["readability_score"]        # 0–25
+    m = analyze_maintainability(code)["maintainability_score"]
+    d = analyze_documentation(code)["documentation_score"]
+    s = analyze_style(code)["style_score"]
 
-    # Extract numeric scores
-    r_score = readability_result["readability_score"]
-    m_score = maintainability_result["maintainability_score"]
-    d_score = documentation_result["documentation_score"]
-    s_score = style_result["style_score"]
+    # ✅ BASE SCORE (MANDATORY)
+    base_score = (
+        0.40 * r +
+        0.40 * m +
+        0.15 * d +
+        0.05 * s
+    ) * 4   # convert to 0–100
 
-    # Convert scores to penalties
-    readability_penalty = 25 - r_score
-    maintainability_penalty = 25 - m_score
-    documentation_penalty = 25 - d_score
-    style_penalty = 25 - s_score
+    bonus = 0
 
-    # Total penalty
-    total_penalty = (
-        readability_penalty +
-        maintainability_penalty +
-        documentation_penalty +
-        style_penalty
-    )
+    if r >= 20 and m >= 22 and d >= 20 and s >= 16:
+        bonus = 7
 
-    # Final quality score (0–100)
-    quality_score = max(0, 100 - total_penalty)
+    final_score = min(100, round(base_score + bonus, 1))
 
     return {
-        "quality_score": quality_score
+        "qualityScore": final_score,
+        "readability": r * 4,
+        "maintainability": m * 4,
+        "documentation": d * 4,
+        "style": s * 4,
     }

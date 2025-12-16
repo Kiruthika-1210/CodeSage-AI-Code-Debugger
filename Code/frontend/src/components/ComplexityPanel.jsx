@@ -6,7 +6,7 @@ function ComplexityPanel({ data }) {
 
   // Destructure with SAFE defaults
   const {
-    cyclomatic = "—",
+    nestingDepth = "—",
     loopDepth = "—",
     bigO = "—",
     score = 0,
@@ -59,8 +59,8 @@ function ComplexityPanel({ data }) {
       {/* Metrics */}
       <div className="space-y-3 mb-6">
         <div className="flex justify-between">
-          <span className="text-gray-400">Cyclomatic Complexity</span>
-          <span className="font-medium">{cyclomatic}</span>
+          <span className="text-gray-400">Nesting Depth</span>
+          <span className="font-medium">{nestingDepth}</span>
         </div>
 
         <div className="flex justify-between">

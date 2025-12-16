@@ -1,52 +1,37 @@
 import os
 import json
-import requests
+import re
+import google.generativeai as genai
 from dotenv import load_dotenv
 
-# Load .env
 load_dotenv()
+
 API_KEY = os.getenv("GOOGLE_API_KEY")
-
 if not API_KEY:
-    raise RuntimeError("❌ Missing GOOGLE_API_KEY in .env")
+    raise RuntimeError("Missing GOOGLE_API_KEY")
 
-# Gemini REST endpoint — correct, stable
-GEMINI_URL = (
-    "https://generativelanguage.googleapis.com/v1beta/models/"
-    "gemini-1.5-flash:generateContent"
-)
+genai.configure(api_key=API_KEY)
+
+model = genai.GenerativeModel("models/gemini-flash-latest")
 
 
 def call_gemini(prompt: str):
-    """
-    Sends text prompt to Gemini REST API.
-    Returns parsed JSON output OR safe fallback.
-    """
-
-    payload = {
-        "contents": [
-            {"parts": [{"text": prompt}]}
-        ]
-    }
-
     try:
-        response = requests.post(
-            f"{GEMINI_URL}?key={API_KEY}",
-            json=payload,
-            headers={"Content-Type": "application/json"}
-        )
+        response = model.generate_content(prompt)
+        text = response.text.strip()
 
-        data = response.json()
+        # Remove markdown code fences if present
+        if text.startswith("```"):
+            text = re.sub(r"^```(?:json)?|```$", "", text).strip()
 
-        # Extract text output:
-        text = data["candidates"][0]["content"]["parts"][0]["text"]
-
-        # Try parsing JSON (our prompts always return JSON)
-        try:
-            return json.loads(text)
-        except:
-            return {"raw": text}
+        return json.loads(text)
 
     except Exception as e:
-        # Backend must NEVER crash → always fallback
-        return {"error": str(e)}
+        msg = str(e)
+        if "429" in msg:
+            return {
+                "error": "AI quota exceeded. Please retry shortly."
+            }
+        return {
+            "error": msg
+        }

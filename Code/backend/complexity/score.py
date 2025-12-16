@@ -154,6 +154,6 @@ def complexity_score(code: str):
         branching_penalty
     )
 
-    quality_score = max(0, 100 - total_penalty)
+    qualityScore = max(0, 100 - total_penalty)
 
-    return quality_score
+    return qualityScore

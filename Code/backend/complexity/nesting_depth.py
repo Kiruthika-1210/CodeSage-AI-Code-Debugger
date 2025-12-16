@@ -2,7 +2,7 @@ import ast
 
 def analyze_nest(tree):
     nests = (ast.If, ast.For, ast.While, ast.With, ast.Try, ast.AsyncFor, ast.AsyncWith)
-    max_nesting_depth = -1
+    max_nesting_depth = 0
 
     def nest_visit(node, depth):
         nonlocal max_nesting_depth

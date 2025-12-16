@@ -1,15 +1,15 @@
 Analyze the given code.
 
 Explain:
-- issues  
-- complexity  
-- readability  
-- maintainability  
-- style  
-- documentation  
-- why each issue matters  
-- severity  
-- how to fix  
+- issues
+- complexity
+- readability
+- maintainability
+- style
+- documentation
+- why each issue matters
+- severity
+- how to fix
 
 OUTPUT JSON ONLY:
 {

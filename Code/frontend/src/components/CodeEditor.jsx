@@ -9,6 +9,7 @@ function CodeEditor({
     onAnalyze,
     onRefactor,
     onFullPipeline,
+    onGenerateTests,
 }) {
     const fileInputRef = useRef(null);
 
@@ -49,6 +50,10 @@ function CodeEditor({
 
                     <button onClick={onFullPipeline} className="btn">
                         Full Pipeline
+                    </button>
+
+                    <button onClick={onGenerateTests} className="btn">
+                        Generate Tests
                     </button>
 
                 </div>

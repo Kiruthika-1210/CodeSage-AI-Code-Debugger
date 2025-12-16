@@ -7,18 +7,24 @@ import ScorePanel from "../components/ScorePanel";
 import RefactoredCode from "../components/RefactoredCode";
 import ExplanationPanel from "../components/ExplanationPanel";
 import VersionHistory from "../components/VersionHistory";
+import TestCasesPanel from "../components/TestCasesPanel";
 
 import {
   analyzeCode,
   refactorCode,
   analyzeAndRefactor,
+  saveVersion,
+  getVersionHistory,
+  deleteVersion,
+  clearAllVersions,
+  generateTestCases,
 } from "../utils/api";
+
 
 function Home({ theme, setTheme }) {
   /* =======================
      CORE STATE
   ======================= */
-
   const [code, setCode] = useState("");
 
   const [issues, setIssues] = useState([]);
@@ -35,10 +41,20 @@ function Home({ theme, setTheme }) {
 
   const [versionHistory, setVersionHistory] = useState([]);
 
+  const [testCases, setTestCases] = useState(null);
+
+  /* =======================
+     LOAD VERSION HISTORY (PHASE 4)
+  ======================= */
+  useEffect(() => {
+    getVersionHistory()
+      .then(setVersionHistory)
+      .catch(console.error);
+  }, []);
+
   /* =======================
      RESET ON EMPTY CODE
   ======================= */
-
   useEffect(() => {
     if (code.trim() === "") {
       setIssues([]);
@@ -52,7 +68,6 @@ function Home({ theme, setTheme }) {
   /* =======================
      DERIVED STATE
   ======================= */
-
   const canSaveVersion =
     issues.length > 0 ||
     complexity !== null ||
@@ -62,71 +77,113 @@ function Home({ theme, setTheme }) {
   /* =======================
      HANDLERS
   ======================= */
-
   async function handleAnalyze() {
     const result = await analyzeCode(code);
     setIssues(result.issues);
-    setComplexity(result.complexity);
-    setScores({ finalScore: result.qualityScore });
+    const c = result.complexity;
+    setComplexity({
+      nestingDepth: c.nesting?.max_nesting_depth ?? "—",
+      loopDepth: c.loops?.max_loop_depth ?? "—",
+      bigO: c.big_o ?? "—",
+      score: c.score ?? 0,
+      patterns: c.loops?.nested_loops_detected ? ["Nested Loops"] : []
+    });
+    setScores({
+      readability: result.readability,
+      maintainability: result.maintainability,
+      documentation: result.documentation,
+      style: result.style,
+      finalScore: result.qualityScore,
+    });
   }
 
   async function handleRefactor() {
-    const result = await refactorCode(code);
+    const result = await refactorCode(code, issues);
     setRefactoredCode(result.refactoredCode);
     setExplanation(result.explanation);
   }
+
 
   async function handleFullPipeline() {
     const result = await analyzeAndRefactor(code);
 
     setIssues(result.issues);
     setComplexity(result.complexity);
-    setScores({ finalScore: result.qualityScore });
+    setScores({
+      readability: result.readability,
+      maintainability: result.maintainability,
+      style: result.style,
+      documentation: result.documentation,
+      finalScore: result.qualityScore,
+    });
     setRefactoredCode(result.refactoredCode);
     setExplanation(result.explanation);
 
-    // 🔥 Auto-save version
-    const newVersion = {
-      id: `v${versionHistory.length + 1}`,
-      timestamp: new Date().toLocaleString(),
-      code,
+    // 🔥 AUTO-SAVE TO BACKEND
+    await saveVersion({
+      original_code: code,
+      refactored_code: result.refactoredCode,
       issues: result.issues,
-      complexity: {
-        bigO: result.complexity.bigO,
-        score: result.complexity.score,
-      },
-      score: { final: result.qualityScore },
-      diff: "Auto-saved after Analyze + Refactor",
-    };
+      complexity: result.complexity,
+      qualityScore: result.qualityScore,
+    });
 
-    setVersionHistory((prev) => [...prev, newVersion]);
+    // 🔄 Reload persisted history
+    const history = await getVersionHistory();
+    setVersionHistory(history);
   }
 
-  function handleSaveVersion() {
-    const newVersion = {
-      id: `v${versionHistory.length + 1}`,
-      timestamp: new Date().toLocaleString(),
-      code,
-      issues,
-      complexity,
-      score:
-        scores.finalScore !== null
-          ? { final: scores.finalScore }
-          : null,
-      diff: "Manual snapshot saved",
-    };
+  async function handleSaveVersion() {
+    try {
+      await saveVersion({
+        original_code: code,
+        refactored_code: refactoredCode || code,
+        issues,
+        complexity,
+        qualityScore: scores.finalScore,
+      });
 
-    setVersionHistory((prev) => [...prev, newVersion]);
+      const history = await getVersionHistory();
+      setVersionHistory(history);
+    } catch (err) {
+      console.error("Save version failed:", err);
+    }
   }
+
+  async function handleDeleteVersion(versionId) {
+    await deleteVersion(versionId);
+    const history = await getVersionHistory();
+    setVersionHistory(history);
+  }
+  
+  async function handleClearAllVersions() {
+    await clearAllVersions();
+    setVersionHistory([]);
+  }
+
+  async function handleGenerateTests() {
+    try {
+      const tests = await generateTestCases(
+        refactoredCode || code, // prefer refactored code
+        issues
+      );
+      setTestCases(tests);
+    } catch (err) {
+      console.error("Test case generation failed", err);
+    }
+  }
+
+
 
   /* =======================
      RENDER
   ======================= */
-
   return (
-    <div className="min-h-screen bg-neutral-100 dark:bg-neutral-950
-                    text-neutral-900 dark:text-neutral-100
-                    transition-colors duration-300">
+    <div
+      className="min-h-screen bg-neutral-100 dark:bg-neutral-950
+                 text-neutral-900 dark:text-neutral-100
+                 transition-colors duration-300"
+    >
       <div className="mx-auto max-w-6xl px-6 py-8 space-y-8">
 
         {/* 🌗 THEME TOGGLE */}
@@ -150,6 +207,7 @@ function Home({ theme, setTheme }) {
           onAnalyze={handleAnalyze}
           onRefactor={handleRefactor}
           onFullPipeline={handleFullPipeline}
+          onGenerateTests={handleGenerateTests}
         />
 
         <IssueList
@@ -172,9 +230,16 @@ function Home({ theme, setTheme }) {
 
         {explanation && <ExplanationPanel data={explanation} />}
 
+        {Array.isArray(testCases) && (
+          <TestCasesPanel testCases={testCases} />
+        )}
+
+
         <VersionHistory
           versions={versionHistory}
           onSaveVersion={handleSaveVersion}
+          onDeleteVersion={handleDeleteVersion}
+          onClearAll={handleClearAllVersions}
           canSave={canSaveVersion}
         />
 

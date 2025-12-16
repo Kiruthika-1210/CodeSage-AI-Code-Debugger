@@ -1,8 +1,9 @@
 from pydantic import BaseModel
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
+
 
 class AIRequest(BaseModel):
     code: str
-    issues: Optional[List] = None
-    complexity: Optional[Dict] = None
-    quality: Optional[Dict] = None
+    issues: Optional[List[Dict[str, Any]]] = None
+    complexity: Optional[Dict[str, Any]] = None
+    quality: Optional[Dict[str, Any]] = None
