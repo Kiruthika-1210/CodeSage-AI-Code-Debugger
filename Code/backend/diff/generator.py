@@ -1,14 +1,8 @@
 # generator.py — Diff Engine
-# This module compares old and new code, generates a unified diff,
-# and produces a summary of changes.
-#
 # Responsibilities:
-# - Take old_code and new_code as strings
-# - Generate GitHub-style unified diff using difflib
-# - Count added, removed, modified lines
-# - Return JSON-friendly output:
-#     { "diff": "...", "summary": "..." }
-# - Provide safe fallback if diff fails
+# - Generate unified diff
+# - Produce summary
+
 
 import difflib
 
@@ -27,7 +21,7 @@ def generate_diff(old_code: str, new_code: str) -> dict:
     old_code = old_code or ""
     new_code = new_code or ""
 
-    # If both versions are identical → no diff needed
+    # If both versions are identical - no diff needed
     if old_code.strip() == new_code.strip():
         return {
             "diff": "",
@@ -35,11 +29,10 @@ def generate_diff(old_code: str, new_code: str) -> dict:
         }
 
     try:
-        # Step 3: Split code into lines for difflib
         old_lines = old_code.splitlines(keepends=True)
         new_lines = new_code.splitlines(keepends=True)
 
-        # Step 3: Generate unified diff (GitHub style)
+        # Generate unified diff (GitHub style)
         diff_lines = list(
             difflib.unified_diff(
                 old_lines,
@@ -53,7 +46,7 @@ def generate_diff(old_code: str, new_code: str) -> dict:
         # Combine lines into one full diff text
         diff_text = "\n".join(diff_lines)
 
-        # Step 4: Count changes for summary
+        # Count changes for summary
         added = 0
         removed = 0
 
@@ -71,7 +64,6 @@ def generate_diff(old_code: str, new_code: str) -> dict:
             if line.startswith("+original") or line.startswith("-refactored"):
                 continue
 
-            # Actual change counting
             if line.startswith("+"):
                 added += 1
             elif line.startswith("-"):
@@ -88,7 +80,6 @@ def generate_diff(old_code: str, new_code: str) -> dict:
         }
 
     except Exception:
-        # Step 6: Fault tolerance
         return {
             "diff": "",
             "summary": "Diff generation failed"

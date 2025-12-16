@@ -10,7 +10,7 @@ def overall_score(code: str):
     d = analyze_documentation(code)["documentation_score"]
     s = analyze_style(code)["style_score"]
 
-    # ✅ BASE SCORE (MANDATORY)
+    # BASE SCORE 
     base_score = (
         0.40 * r +
         0.40 * m +

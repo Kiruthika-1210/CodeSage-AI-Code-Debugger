@@ -5,7 +5,11 @@ from routes.analyze import router as analyze_router
 from routes.ai_routes import router as ai_router
 from routes.version_routes import router as version_router
 
+from versions.versions import init_db
+
 app = FastAPI()
+
+init_db()
 
 # Attach routers
 app.include_router(analyze_router)

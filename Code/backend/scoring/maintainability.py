@@ -2,9 +2,7 @@ def analyze_maintainability(code: str):
     lines = code.splitlines()
     penalty = 0
 
-    # ---------------------------
-    # 1. FUNCTION LENGTH
-    # ---------------------------
+    # FUNCTION LENGTH
     functions = []
     n = len(lines)
     i = 0
@@ -32,9 +30,7 @@ def analyze_maintainability(code: str):
         elif length > 30:
             penalty += 5
 
-    # ---------------------------
-    # 2. REPEATED LOGIC (SOFT)
-    # ---------------------------
+    # REPEATED LOGIC 
     seen = set()
     repeat_hits = 0
 
@@ -54,11 +50,9 @@ def analyze_maintainability(code: str):
             seen.add(block)
 
     if repeat_hits >= 2:
-        penalty += 5   # soft penalty, not brutal
+        penalty += 5   
 
-    # ---------------------------
-    # 3. DEEP NESTING (LIGHT)
-    # ---------------------------
+    # DEEP NESTING 
     max_depth = 0
     for line in lines:
         if line.strip():
@@ -70,9 +64,7 @@ def analyze_maintainability(code: str):
     elif max_depth >= 4:
         penalty += 3
 
-    # ---------------------------
-    # 4. BRANCH COUNT
-    # ---------------------------
+    # BRANCH COUNT
     branch_count = sum(
         1 for line in lines
         if line.strip().startswith(("if ", "elif ", "else:", "match ", "case "))
@@ -83,9 +75,7 @@ def analyze_maintainability(code: str):
     elif branch_count >= 4:
         penalty += 3
 
-    # ---------------------------
     # FINAL SCORE
-    # ---------------------------
     penalty = min(penalty, 25)
     score = max(0, 25 - penalty)
 

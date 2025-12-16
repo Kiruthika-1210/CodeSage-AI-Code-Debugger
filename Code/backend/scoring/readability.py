@@ -74,8 +74,6 @@ def analyze_readability(code: str):
                     penalty += 5
 
     
-
-
     # Score clamp
     penalty = min(penalty, MAX_READABILITY_LOSS)
     readability_score = max(0, base_score - penalty)

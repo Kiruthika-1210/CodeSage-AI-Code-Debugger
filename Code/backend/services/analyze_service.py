@@ -1,4 +1,3 @@
-# services/analyze_service.py
 from analysis.run_all import run_static_analysis
 from scoring.overall import overall_score
 

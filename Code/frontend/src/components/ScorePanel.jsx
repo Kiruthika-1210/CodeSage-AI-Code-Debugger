@@ -2,8 +2,6 @@ import React from "react";
 
 function ScorePanel({ data }) {
 
-  console.log("🎛️ ScorePanel received data:", data);
-
   const getBarColor = (score) => {
     if (score >= 75) return "bg-green-500";
     if (score >= 50) return "bg-yellow-400";
@@ -52,7 +50,7 @@ function ScorePanel({ data }) {
           </span>
         </div>
 
-        {/* ✅ SCORE + LABEL */}
+        {/* SCORE + LABEL */}
         <div className="flex items-center gap-3">
           <span className={`font-medium ${textColor}`}>
             {safeValue}/100

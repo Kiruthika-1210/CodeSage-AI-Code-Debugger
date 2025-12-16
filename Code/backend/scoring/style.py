@@ -19,15 +19,15 @@ def analyze_style(code: str):
     for line in slices:
         stripped = line.strip()
 
-        # 1. Trailing spaces
+        # Trailing spaces
         if line.endswith(" "):
             penalty += 2
 
-        # 2. Bad parentheses around conditions: if(x==1):
+        # Bad parentheses around conditions: if(x==1):
         if stripped.startswith(("if(", "elif(", "while(")):
             penalty += 4
 
-        # 3. Bad spacing around '=' (ignore '==')
+        # Bad spacing around '=' (ignore '==')
         if "=" in line and "==" not in line:
             idx = line.index("=")
             left = line[idx - 1] if idx > 0 else ""
@@ -36,7 +36,7 @@ def analyze_style(code: str):
             if left != " " or right != " ":
                 penalty += 3
 
-        # 4. Bad spacing around + - * /
+        # Bad spacing around + - * /
         operators = ["+", "-", "*", "/"]
         for op in operators:
             if op in line:
@@ -52,14 +52,13 @@ def analyze_style(code: str):
                 if left != " " or right != " ":
                     penalty += 3
 
-        # 5. Colon misuse → statement on same line
-        # Example: if x: print(x)
+        # Colon misuse - statement on same line
         if ":" in line:
             parts = line.split(":")
             if len(parts) > 1 and parts[1].strip() != "":
                 penalty += 3
 
-    # 6. Missing newline at end of file
+    # Missing newline at end of file
     if slices and slices[-1].strip() != "":
         penalty += 2
 

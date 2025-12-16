@@ -4,10 +4,7 @@ function ExplanationPanel({ data }) {
   // Guard: nothing to show
   if (!data) return null;
 
-  /* =======================
-     CASE 1: STRING EXPLANATION
-     (Stub / quick demo)
-  ======================= */
+  // STRING EXPLANATION
   if (typeof data === "string") {
     return (
       <div className="mt-8 p-6 rounded-2xl bg-[#0d0d0f] border border-[#1a1a1d] shadow-xl text-white">
@@ -21,10 +18,7 @@ function ExplanationPanel({ data }) {
     );
   }
 
-  /* =======================
-     CASE 2: OBJECT EXPLANATION
-     (Full backend-ready format)
-  ======================= */
+  // OBJECT EXPLANATION
   return (
     <div className="mt-8 p-6 rounded-2xl bg-[#0d0d0f] border border-[#1a1a1d] shadow-xl text-white">
 

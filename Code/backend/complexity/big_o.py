@@ -1,6 +1,5 @@
 import ast
 from complexity.loops import analyze_loops
-from complexity.nesting_depth import analyze_nest
 
 def detect_recursion(tree):
     linear = False
@@ -39,7 +38,6 @@ def estimate_loop_big_o(depth):
 
 def estimate_big_o(tree):
     loop_data = analyze_loops(tree)
-    nest_data = analyze_nest(tree)
 
     loop_depth = loop_data["max_loop_depth"]
 

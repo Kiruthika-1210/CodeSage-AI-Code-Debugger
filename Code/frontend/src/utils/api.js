@@ -1,8 +1,6 @@
 const BASE_URL = "http://127.0.0.1:8000";
 
-/* =====================================================
-   SESSION ID (STABLE & PERSISTENT)
-===================================================== */
+// SESSION ID (STABLE & PERSISTENT)
 export const sessionId =
   localStorage.getItem("codesage_session") ??
   (() => {
@@ -11,9 +9,7 @@ export const sessionId =
     return id;
   })();
 
-/* =====================================================
-   ANALYZE CODE
-===================================================== */
+// ANALYZE CODE
 export async function analyzeCode(code) {
   const res = await fetch(`${BASE_URL}/analyze`, {
     method: "POST",
@@ -25,10 +21,7 @@ export async function analyzeCode(code) {
   return await res.json();
 }
 
-
-/* =====================================================
-   AI REFACTOR
-===================================================== */
+// AI REFACTOR
 export async function refactorCode(code, issues = []) {
   const res = await fetch(`${BASE_URL}/ai/refactor`, {
     method: "POST",
@@ -44,9 +37,7 @@ export async function refactorCode(code, issues = []) {
   };
 }
 
-/* =====================================================
-   ANALYZE + REFACTOR
-===================================================== */
+// ANALYZE + REFACTOR
 export async function analyzeAndRefactor(code) {
   const res = await fetch(`${BASE_URL}/ai/analyze-and-refactor`, {
     method: "POST",
@@ -58,9 +49,7 @@ export async function analyzeAndRefactor(code) {
   return res.json();
 }
 
-/* =====================================================
-   TEST CASES
-===================================================== */
+// TEST CASES
 export async function generateTestCases(code) {
   const res = await fetch(`${BASE_URL}/ai/testcases`, {
     method: "POST",
@@ -73,9 +62,7 @@ export async function generateTestCases(code) {
   return data.test_cases ?? [];
 }
 
-/* =====================================================
-   VERSION HISTORY
-===================================================== */
+// VERSION HISTORY
 export async function getVersionHistory() {
   const res = await fetch(`${BASE_URL}/versions/${sessionId}`);
   if (!res.ok) return [];

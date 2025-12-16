@@ -2,7 +2,6 @@
 
 import logging
 import os
-import re
 from services.ai_client import call_gemini
 
 logger = logging.getLogger(__name__)
@@ -20,22 +19,20 @@ def _safe_extract_preview(response: dict, original_code: str):
     if not isinstance(response, dict):
         return original_code, "AI returned invalid response format."
 
-    # ✅ Case 1: Ideal response
+    # Ideal response
     if isinstance(response.get("preview_code"), str):
         return response["preview_code"], response.get("explanation", "")
 
-    # ✅ Case 2: Old key name
+    # Old key name
     if isinstance(response.get("refactored_code"), str):
         return response["refactored_code"], response.get("notes", "")
 
-    # ✅ Case 3: Raw text (LLM ignored JSON rules)
+    # Raw text (LLM ignored JSON rules)
     raw_text = response.get("raw_text")
     if isinstance(raw_text, str) and raw_text.strip():
         return raw_text.strip(), "Extracted from AI raw output."
-    
-    print("USING PROMPT:", PROMPT_PATH, os.path.exists(PROMPT_PATH))
 
-    # ❌ Nothing usable
+    # Nothing usable
     return original_code, "AI preview unavailable. Showing original code."
 
 

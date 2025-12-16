@@ -24,29 +24,18 @@ def run_refactor_step(code, issues):
     result = {}
     issues = issues or []
 
-    print("\n================ REFACTOR STEP START ================")
-    print("Incoming code:\n", code)
-    print("Issues:", issues)
-
     try:
-        # -------------------------------
         # Load prompt template
-        # -------------------------------
-        print("\nLoading prompt from:", PROMPT_PATH)
         with open(PROMPT_PATH, encoding="utf-8") as f:
             template = f.read()
 
-        # -------------------------------
         # Build issues text
-        # -------------------------------
         issues_text = "\n".join(
             f"- {i.get('type')}: {i.get('message')}"
             for i in issues
         ) or "No issues detected."
 
-        # -------------------------------
         # Construct final prompt
-        # -------------------------------
         prompt = (
             template
             + "\n\nISSUES DETECTED:\n"
@@ -55,20 +44,10 @@ def run_refactor_step(code, issues):
             + code
         )
 
-        print("\nFinal Prompt Sent to Gemini:\n", prompt)
-
-        # -------------------------------
         # Call Gemini
-        # -------------------------------
         response = call_gemini(prompt)
 
-        print("\nRAW GEMINI RESPONSE:")
-        print(response)
-        print("Response type:", type(response))
-
-        # -------------------------------
         # Normalize Gemini output
-        # -------------------------------
         if isinstance(response, dict):
             text = (
                 response.get("text")
@@ -81,11 +60,8 @@ def run_refactor_step(code, issues):
 
         text = text.strip()
 
-        # -------------------------------
         # Remove markdown fences if present
-        # -------------------------------
         if text.startswith("```"):
-            print("\nStripping markdown fences")
             parts = text.split("```")
             if len(parts) >= 2:
                 text = parts[1]
@@ -94,35 +70,24 @@ def run_refactor_step(code, issues):
 
         refactored_code = text.strip().replace("\r\n", "\n")
 
-        print("\nExtracted Refactored Code:\n", refactored_code)
-
-        # -------------------------------
-        # If empty → fallback
-        # -------------------------------
+        # If empty - fallback
         if not refactored_code:
-            print("⚠️ Gemini returned EMPTY output — fallback triggered")
             result["refactored_code"] = code
             result["notes"] = "AI returned empty refactor output"
             return result
 
-        # -------------------------------
         # Validate generated code
-        # -------------------------------
         try:
             compile(refactored_code, "<string>", "exec")
-            print("✅ Refactored code compiled successfully")
             result["refactored_code"] = refactored_code
             result["notes"] = "Refactor successful"
         except Exception as compile_error:
-            print("❌ Compile failed:", compile_error)
             result["refactored_code"] = code
             result["notes"] = "AI refactor invalid — fallback"
 
     except Exception as e:
-        logger.exception("❌ Refactor step crashed")
-        print("❌ Exception:", e)
+        logger.exception("Refactor step crashed")
         result["refactored_code"] = code
         result["notes"] = "AI refactor failed — fallback"
 
-    print("================ REFACTOR STEP END =================\n")
     return result

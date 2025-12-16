@@ -13,10 +13,7 @@ function ComplexityPanel({ data }) {
     patterns = [],
   } = data;
 
-  /* =======================
-     Color & Label Helpers
-  ======================= */
-
+  // Color & Label Helpers
   const getScoreColor = (score) => {
     if (score >= 80) return "bg-green-500";
     if (score >= 50) return "bg-yellow-400";
@@ -45,10 +42,7 @@ function ComplexityPanel({ data }) {
     return "text-red-400";
   };
 
-  /* =======================
-     RENDER
-  ======================= */
-
+  // RENDER
   return (
     <div className="mt-8 p-6 rounded-2xl bg-[#0d0d0f] border border-[#1a1a1d] shadow-xl text-white">
 

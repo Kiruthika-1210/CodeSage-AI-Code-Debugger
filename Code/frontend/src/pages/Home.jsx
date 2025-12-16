@@ -22,9 +22,7 @@ import {
 
 
 function Home({ theme, setTheme }) {
-  /* =======================
-     CORE STATE
-  ======================= */
+  // CORE STATE
   const [code, setCode] = useState("");
 
   const [issues, setIssues] = useState([]);
@@ -43,18 +41,14 @@ function Home({ theme, setTheme }) {
 
   const [testCases, setTestCases] = useState(null);
 
-  /* =======================
-     LOAD VERSION HISTORY (PHASE 4)
-  ======================= */
+  // LOAD VERSION HISTORY 
   useEffect(() => {
     getVersionHistory()
       .then(setVersionHistory)
       .catch(console.error);
   }, []);
 
-  /* =======================
-     RESET ON EMPTY CODE
-  ======================= */
+  // RESET ON EMPTY CODE
   useEffect(() => {
     if (code.trim() === "") {
       setIssues([]);
@@ -65,18 +59,14 @@ function Home({ theme, setTheme }) {
     }
   }, [code]);
 
-  /* =======================
-     DERIVED STATE
-  ======================= */
+  // DERIVED STATE
   const canSaveVersion =
     issues.length > 0 ||
     complexity !== null ||
     scores.finalScore !== null ||
     refactoredCode !== "";
 
-  /* =======================
-     HANDLERS
-  ======================= */
+  // HANDLERS
   async function handleAnalyze() {
     const result = await analyzeCode(code);
     setIssues(result.issues);
@@ -119,7 +109,7 @@ function Home({ theme, setTheme }) {
     setRefactoredCode(result.refactoredCode);
     setExplanation(result.explanation);
 
-    // 🔥 AUTO-SAVE TO BACKEND
+    // AUTO-SAVE TO BACKEND
     await saveVersion({
       original_code: code,
       refactored_code: result.refactoredCode,
@@ -128,7 +118,7 @@ function Home({ theme, setTheme }) {
       qualityScore: result.qualityScore,
     });
 
-    // 🔄 Reload persisted history
+    // Reload persisted history
     const history = await getVersionHistory();
     setVersionHistory(history);
   }
@@ -174,10 +164,7 @@ function Home({ theme, setTheme }) {
   }
 
 
-
-  /* =======================
-     RENDER
-  ======================= */
+  // RENDER
   return (
     <div
       className="min-h-screen bg-neutral-100 dark:bg-neutral-950
@@ -186,7 +173,7 @@ function Home({ theme, setTheme }) {
     >
       <div className="mx-auto max-w-6xl px-6 py-8 space-y-8">
 
-        {/* 🌗 THEME TOGGLE */}
+        {/* THEME TOGGLE */}
         <div className="flex justify-end">
           <button
             onClick={() =>
@@ -197,7 +184,7 @@ function Home({ theme, setTheme }) {
                        hover:bg-neutral-200 dark:hover:bg-neutral-800
                        transition"
           >
-            {theme === "dark" ? "🌞 Light Mode" : "🌙 Dark Mode"}
+            {theme === "dark" ? "Light Mode" : "Dark Mode"}
           </button>
         </div>
 

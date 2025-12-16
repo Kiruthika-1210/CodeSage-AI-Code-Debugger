@@ -14,10 +14,10 @@ function TestCasesPanel({ testCases }) {
 
       {/* Header */}
       <h2 className="flex items-center gap-2 text-xl font-semibold text-[#d4a44d] mb-4">
-        🧪 Test Cases
+         Test Cases
       </h2>
 
-      {/* Tabs (LeetCode style) */}
+      {/* Tabs */}
       <div className="flex gap-2 mb-6">
         {testCases.map((_, idx) => (
           <button

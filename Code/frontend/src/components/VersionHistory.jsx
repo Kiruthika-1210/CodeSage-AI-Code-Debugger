@@ -13,7 +13,7 @@ function VersionHistory({
   return (
     <div className="mt-8 p-6 rounded-2xl bg-[#0d0d0f] border border-[#1a1a1d] shadow-xl text-white">
 
-      {/* ================= HEADER ================= */}
+      {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="flex items-center gap-2 text-xl font-semibold text-[#d4a44d]">
           Version History
@@ -33,7 +33,7 @@ function VersionHistory({
                   : "text-neutral-500 border border-neutral-700 cursor-not-allowed"
               }`}
           >
-            🧹 Clear All
+             Clear All
           </button>
 
           <button
@@ -46,12 +46,12 @@ function VersionHistory({
                   : "bg-neutral-700 text-neutral-400 cursor-not-allowed"
               }`}
           >
-            💾 Save Version
+             Save Version
           </button>
         </div>
       </div>
 
-      {/* ================= TIMELINE ================= */}
+      {/* TIMELINE */}
       {versions.length === 0 ? (
         <p className="text-gray-500 text-sm">No versions saved yet.</p>
       ) : (
@@ -97,7 +97,7 @@ function VersionHistory({
         </div>
       )}
 
-      {/* ================= MODAL ================= */}
+      {/* MODAL */}
       {selectedVersion && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div className="w-[90%] max-w-3xl bg-[#0d0d0f]
@@ -137,7 +137,7 @@ function VersionHistory({
               <div className="mb-4">
                 <p className="text-gray-400 mb-1">Issues</p>
                 {selectedVersion.issues?.length === 0 ? (
-                  <p className="text-green-400 text-sm">No issues 🎉</p>
+                  <p className="text-green-400 text-sm">No issues</p>
                 ) : (
                   <ul className="list-disc list-inside text-sm text-gray-300">
                     {selectedVersion.issues?.map((issue, idx) => (

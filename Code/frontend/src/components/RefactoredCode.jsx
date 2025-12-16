@@ -6,18 +6,14 @@ function RefactoredCode({ originalCode, refactoredCode }) {
 
   if (!refactoredCode) return null;
 
-  /* =======================
-     COPY
-  ======================= */
+  // COPY
   function handleCopy() {
     navigator.clipboard.writeText(refactoredCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
-  /* =======================
-     DOWNLOAD
-  ======================= */
+  // DOWNLOAD
   function handleDownload() {
     const blob = new Blob([refactoredCode], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
@@ -30,9 +26,7 @@ function RefactoredCode({ originalCode, refactoredCode }) {
     URL.revokeObjectURL(url);
   }
 
-  /* =======================
-     DIFF LOGIC (FRONTEND)
-  ======================= */
+  // DIFF LOGIC 
   function getDiffLines(original = "", refactored = "") {
     const originalLines = original.split("\n");
     const refactoredLines = refactored.split("\n");
@@ -65,10 +59,7 @@ function RefactoredCode({ originalCode, refactoredCode }) {
 
   const diffLines = getDiffLines(originalCode, refactoredCode);
 
-  /* =======================
-     RENDER
-  ======================= */
-
+  // RENDER
   return (
     <div className="mt-8 p-6 rounded-2xl bg-[#0d0d0f] border border-[#1a1a1d] shadow-xl text-white">
 
@@ -96,7 +87,7 @@ function RefactoredCode({ originalCode, refactoredCode }) {
                        text-[#d4a44d] border border-[#d4a44d]/60
                        hover:bg-black transition"
           >
-            {copied ? "✅ Copied" : "📋 Copy"}
+            {copied ? "Copied" : "Copy"}
           </button>
 
           <button
@@ -104,7 +95,7 @@ function RefactoredCode({ originalCode, refactoredCode }) {
             className="px-3 py-1 rounded-lg text-sm font-medium
                        text-black bg-yellow-500 hover:bg-yellow-400 transition"
           >
-            ⬇ Download
+             Download
           </button>
         </div>
       </div>

@@ -36,6 +36,7 @@ def run_static_analysis(code: str):
             "complexity": {}
             }
     
+    
     #ISSUES
     try:
         if RULES_ENABLED["unused_imports"]:
@@ -130,6 +131,7 @@ def run_static_analysis(code: str):
     
     if issues:
         issues = sorted(issues, key=lambda x: x.get("line", 0))
+
     
     #COMPLEXITY
     loops_result = analyze_loops(tree)

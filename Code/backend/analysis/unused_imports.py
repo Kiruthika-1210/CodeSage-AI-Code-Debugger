@@ -2,111 +2,134 @@ import ast
 from analysis.common import make_issue
 
 
-def rule_unused_names(code: str):
-    tree = ast.parse(code)
+class _UnusedNameVisitor(ast.NodeVisitor):
+    def __init__(self):
+        # First scope = module scope
+        self.scope_stack = [{"assigned": {}, "used": set()}]
+        self.assigned_imports = []
+        self.issues = []
 
-    assigned_imports = []     
-    issues = []
+    # Scope helpers
+    def enter_scope(self):
+        self.scope_stack.append({"assigned": {}, "used": set()})
 
-    # SCOPE STACK:
-    # First scope = module level
-    scope_stack = [{"assigned": {}, "used": set()}]
+    def exit_scope(self):
+        return self.scope_stack.pop()
 
-    def enter_scope():
-        scope_stack.append({"assigned": {}, "used": set()})
+    def add_assigned(self, name, line):
+        self.scope_stack[-1]["assigned"][name] = line
 
-    def exit_scope():
-        return scope_stack.pop()
-
-    def add_assigned_var(name, line):
-        scope_stack[-1]["assigned"][name] = line
-
-    def mark_used(name):
-        # Walk upward: assign usage to nearest matching scope
-        for scope in reversed(scope_stack):
+    def mark_used(self, name):
+        for scope in reversed(self.scope_stack):
             if name in scope["assigned"]:
                 scope["used"].add(name)
                 return
-        return
-    
-    # WALK AST
-    for node in ast.walk(tree):
 
-        # Enter scopes
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-            enter_scope()
+    # Visitors
+    def visit_Import(self, node):
+        for alias in node.names:
+            self.assigned_imports.append({
+                "name": alias.asname or alias.name,
+                "line": node.lineno
+            })
+        self.generic_visit(node)
 
-        # Detect imports
-        if isinstance(node, (ast.Import, ast.ImportFrom)):
-            for alias in node.names:
-                assigned_imports.append({
-                    "name": alias.asname or alias.name,
-                    "line": node.lineno
-                })
+    def visit_ImportFrom(self, node):
+        for alias in node.names:
+            self.assigned_imports.append({
+                "name": alias.asname or alias.name,
+                "line": node.lineno
+            })
+        self.generic_visit(node)
 
-        # Detect assigned variables (var = ...)
-        if isinstance(node, ast.Assign):
-            for target in node.targets:
-                if isinstance(target, ast.Name):
-                    add_assigned_var(target.id, target.lineno)
+    def visit_Assign(self, node):
+        for target in node.targets:
+            if isinstance(target, ast.Name):
+                self.add_assigned(target.id, target.lineno)
+        self.generic_visit(node)
 
-        # Annotated variable: x: int = 5
-        if isinstance(node, ast.AnnAssign):
-            if isinstance(node.target, ast.Name):
-                add_assigned_var(node.target.id, node.target.lineno)
+    def visit_AnnAssign(self, node):
+        if isinstance(node.target, ast.Name):
+            self.add_assigned(node.target.id, node.target.lineno)
+        self.generic_visit(node)
 
-        # For-loop variables
-        if isinstance(node, ast.For):
-            if isinstance(node.target, ast.Name):
-                add_assigned_var(node.target.id, node.target.lineno)
+    def visit_For(self, node):
+        if isinstance(node.target, ast.Name):
+            self.add_assigned(node.target.id, node.target.lineno)
+        self.generic_visit(node)
 
-        # With-block variables
-        if isinstance(node, ast.With):
-            for item in node.items:
-                if isinstance(item.optional_vars, ast.Name):
-                    add_assigned_var(item.optional_vars.id, item.optional_vars.lineno)
+    def visit_With(self, node):
+        for item in node.items:
+            if isinstance(item.optional_vars, ast.Name):
+                self.add_assigned(item.optional_vars.id, item.optional_vars.lineno)
+        self.generic_visit(node)
 
-        # Exception handler: except Exception as e
-        if isinstance(node, ast.ExceptHandler):
-            if isinstance(node.name, str):
-                add_assigned_var(node.name, node.lineno)
+    def visit_ExceptHandler(self, node):
+        if isinstance(node.name, str):
+            self.add_assigned(node.name, node.lineno)
+        self.generic_visit(node)
 
-        # Detect used names
-        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
-            mark_used(node.id)
+    def visit_Name(self, node):
+        if isinstance(node.ctx, ast.Load):
+            self.mark_used(node.id)
 
-        # Exit scope: resolve unused vars inside functions/classes
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-            finished_scope = exit_scope()
+    def visit_FunctionDef(self, node):
+        self.enter_scope()
+        self.generic_visit(node)
+        self._finalize_scope()
+        self.exit_scope()
 
-            for name, line in finished_scope["assigned"].items():
+    def visit_AsyncFunctionDef(self, node):
+        self.enter_scope()
+        self.generic_visit(node)
+        self._finalize_scope()
+        self.exit_scope()
 
-                # ignore intentionally unused variables
-                if name.startswith("_"):
-                    continue
+    def visit_ClassDef(self, node):
+        self.enter_scope()
+        self.generic_visit(node)
+        self._finalize_scope()
+        self.exit_scope()
 
-                if name not in finished_scope["used"]:
-                    issues.append(
-                        make_issue(
-                            issue_type="unused-variable",
-                            message=f"Variable '{name}' is assigned but never used.",
-                            line=line,
-                            severity="low",
-                            suggestion=f"Remove variable '{name}' or use it."
-                        )
+    # Finalization
+    def _finalize_scope(self):
+        scope = self.scope_stack[-1]
+
+        for name, line in scope["assigned"].items():
+            if name.startswith("_"):
+                continue
+            if name not in scope["used"]:
+                self.issues.append(
+                    make_issue(
+                        issue_type="unused-variable",
+                        message=f"Variable '{name}' is assigned but never used.",
+                        line=line,
+                        severity="low",
+                        suggestion=f"Remove variable '{name}' or use it."
                     )
+                )
 
-    # ⭐ HANDLE MODULE-LEVEL UNUSED VARIABLES
-    module_scope = scope_stack[0]
+
+def rule_unused_names(code: str):
+    """
+    Detect unused variables and imports using AST-safe scope tracking.
+    """
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return []
+
+    visitor = _UnusedNameVisitor()
+    visitor.visit(tree)
+
+    # Module-level unused vars
+    module_scope = visitor.scope_stack[0]
 
     for name, line in module_scope["assigned"].items():
-
-        # ignore intentionally unused variables
         if name.startswith("_"):
             continue
-
         if name not in module_scope["used"]:
-            issues.append(
+            visitor.issues.append(
                 make_issue(
                     issue_type="unused-variable",
                     message=f"Variable '{name}' is assigned but never used.",
@@ -116,13 +139,12 @@ def rule_unused_names(code: str):
                 )
             )
 
-    # ⭐ UNUSED IMPORTS CHECK
-    # Collect all used names across all scopes
-    all_used = set().union(*(scope["used"] for scope in scope_stack))
+    # Unused imports
+    all_used = set().union(*(s["used"] for s in visitor.scope_stack))
 
-    for imp in assigned_imports:
+    for imp in visitor.assigned_imports:
         if imp["name"] not in all_used:
-            issues.append(
+            visitor.issues.append(
                 make_issue(
                     issue_type="unused-import",
                     message=f"Import '{imp['name']}' is never used.",
@@ -132,4 +154,4 @@ def rule_unused_names(code: str):
                 )
             )
 
-    return issues
+    return visitor.issues
