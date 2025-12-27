@@ -1,4 +1,4 @@
-const BASE_URL = "http://127.0.0.1:8000";
+const BASE_URL = "https://codesage-backend-eg56.onrender.com";
 
 // SESSION ID (STABLE & PERSISTENT)
 export const sessionId =
